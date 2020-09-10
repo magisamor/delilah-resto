@@ -1,0 +1,556 @@
+openapi: 3.0.0
+info:
+  version: 1.0.1
+  title: Api Resto Delilah
+  description: 'Api para realizar diferentes acciones, CRUD de usuarios, productos y órdenes'
+servers:
+  - description: SwaggerHub API Auto Mocking
+    url: http://localhost:3000/
+  - url: https://virtserver.swaggerhub.com/magisamor/Delilah_resto_v2/1.0.1
+      
+
+externalDocs:
+  description: Github Repository
+  url: https://github.com/magisamor/delilah-resto
+
+tags:
+  - name: login
+  - name: register
+  - name: customers
+  - name: products
+    description: CRUD de productos
+  - name: orders
+    description: CRUD de Pedidos
+    
+paths:
+  /login:
+    post:
+      tags:
+        - login
+      security: []
+      summary: Loguea el usuario en el sistema.
+      operationId: loginUser
+      requestBody:
+        description: Datos necesarios para loguearse.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/login"
+        required: true
+      responses:
+        200:
+          description: Login exitoso.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Token"
+        400:
+          description: User o password invalidos.
+
+
+  /register: 
+    post:
+      tags:
+        - register
+      summary: Crear usuario
+      description: Crear un nuevo usuario en la DB
+      operationId: crearUsuario
+      requestBody:
+        description: Objeto de usuario creado
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/customer"
+        required: true
+      security: []
+      responses:
+        200:
+          description: Usuario registrado correctamente.
+        400:
+          description: Datos incompletos/incorrectos, favor de validar nuevamente.
+        409:
+          description: Usuario o email ya registrados en el sistema
+        default:
+          $ref: "#/components/responses/Default"  
+
+  /customers:
+    get:
+      tags:
+        - customers
+      summary: Obtener un listado de los usuarios (Solo Admin) o Obtener la información del usuario (No Admin).
+      description: Si el usuario que envía la solicitud es un administrador, obtiene una lista de todos los usuarios existentes en la base de datos, de lo contrario, la respuesta solo se dirige al usuario logueado.
+      operationId: getUserInfo
+      responses:
+        200:
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/customerInformation"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/Default"
+
+  /products:
+    get:
+      tags:
+        - products
+      summary: Obtiene una lista de todos los productos disponibles.
+      description: Devuelve una lista de productos (NO incluye productos deshabilitados).
+      operationId: getProducts
+      parameters:
+        - name: search
+          in: query
+          description: Palabras clave para buscar.
+          schema:
+            type: string
+      responses:
+        200:
+          description: Productos obtenidos con éxito.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/products"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/Default"
+
+    post:
+      tags:
+        - products
+      summary: Agregar producto (solo Admin).
+      description: Agregar un producto a la DB.
+      operationId: addProduct
+      requestBody:
+        description: Palabras clave para buscar.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/product"
+        required: true
+      responses:
+        200:
+          description: Producto añadido correctamente.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  example: -2
+        400:
+          description: Error validando los datos ingresados.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        default:
+          $ref: "#/components/responses/Default"
+
+  /products/{id}:
+    get:
+      tags:
+        - products
+      summary: Obtener producto por ID.
+      description: Devuelve un detalle de producto específico, obtenido por su ID.
+      parameters:
+        - name: id
+          in: path
+          description: El ID del producto a buscar.
+          required: true
+          schema:
+            type: string
+      operationId: getProductById
+      responses:
+        200:
+          description: Producto encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/product"
+        400:
+          description: Error validando los datos ingresados.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/Default"
+
+    put:
+      tags:
+        - products
+      summary: Editar producto por ID (solo Admin).
+      description: Edita un producto específico obteniéndolo por su ID.
+      parameters:
+        - name: id
+          in: path
+          description: El ID del producto que debe buscarse.
+          required: true
+          schema:
+            type: string
+      operationId: editProduct
+      requestBody:
+        description: Datos de la modificación.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/product"
+        required: true
+      responses:
+        200:
+          description: "Producto con ID {productId} modificado correctamente."
+        400:
+          description: Error validando los datos ingresados.
+        401:
+          $ref: "#/components/responses/UnauthorizedAdmin"
+        404:
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/Default"
+
+    delete:
+      tags:
+        - products
+      summary: Deshabilitar producto según su ID (solo Admin).
+      description: Inhabilita un producto específico, obtenido por su ID.
+      parameters:
+        - name: id
+          in: path
+          description: El ID del producto que debe buscarse.
+          required: true
+          schema:
+            type: string
+      operationId: deleteProduct
+      responses:
+        200:
+          description: "Producto con ID ${productId} fué inhabilitado correctamente."
+        401:
+          $ref: "#/components/responses/UnauthorizedAdmin"
+        404:
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/Default"
+
+  /orders:
+    get:
+      tags:
+        - orders
+      summary: Obtiene una lista de pedidos.
+      description: Devuelve una lista de productos. Si el usuario que realiza la consulta es administrador, devuelve una lista de todos los pedidos, de lo contrario devuelve una lista de sus pedidos.
+      operationId: getOrders
+      responses:
+        200:
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/orders"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/Default"
+
+    post:
+      tags:
+        - orders
+      summary: Agrega un producto.
+      description: Agrega un producto a la db de pedidos.
+      operationId: addOrder
+      requestBody:
+        description: Pedido a crear.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/newOrder"
+        required: true
+      responses:
+        200:
+          description: Pedido modificado correctamente.
+        400:
+          description: Error validando los datos ingresados.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        default:
+          $ref: "#/components/responses/Default"
+
+  /orders/{id}:
+    put:
+      tags:
+        - orders
+      summary: Modifica el estado de un pedido por ID (solo Admin).
+      description: Editar un pedido específico.
+      operationId: editOrder
+      parameters:
+        - name: id
+          in: path
+          description: El ID del pedido que necesita ser buscado.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Pedido para crear.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                orderStatus:
+                  type: string
+                  example: entregado
+        required: true
+      responses:
+        200:
+          description: "Producto con id {productId} modificado correctamente"
+        400:
+          description: Error validando los datos ingresados.
+        401:
+          $ref: "#/components/responses/UnauthorizedAdmin"
+        403:
+          description: Estado incorrecto para el pedido.
+        404:
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/Default"
+    
+    delete:
+      tags:
+        - orders
+      summary: Eliminar pedido por ID (solo Admin).
+      description: Permite eliminar un pedido específico, pasando como parámetro el ID del mismo.
+      parameters:
+        - name: id
+          in: path
+          description: El ID del pedido que debe eliminarse.
+          required: true
+          schema:
+            type: string
+      operationId: deleteOrder
+      responses:
+        200:
+          description: "Pedido con ID ${productId} fué eliminado correctamente."
+        401:
+          $ref: "#/components/responses/UnauthorizedAdmin"
+        404:
+          $ref: "#/components/responses/NotFound"
+        default:
+          $ref: "#/components/responses/Default"
+
+
+
+
+
+components:
+  schemas:
+    login: 
+      type: object
+      properties:
+        user:
+          type: string
+          example: alejogomez
+        password:
+          type: string
+          example: MiPass1234
+          
+    customer:
+      type: object
+      properties:
+        user:
+          type: string
+          example: alejo_gomez
+        full_name:
+          type: string
+          example: Alejo Gomez  
+        email:
+          type: string
+          example: usuario@server.com
+        phone:
+          type: integer
+          example: 3515555555
+        shipping_address:
+          type: string
+          example: Av. Siempreviva 123
+        password:
+          type: string
+          example: MiPass1234  
+          
+    customerInformation:
+      type: array
+      items:
+        type: object
+        properties:
+          idCustomer:
+            type: integer
+            example: 10
+          user:
+            type: string
+            example: alejo_gomez
+          fullname:
+            type: string
+            example: Alejo Gomez
+          email:
+            type: string
+            example: usuario@server.com
+          phone:
+            type: integer
+            example: 3515555555
+          shipping_address:
+            type: string
+            example: Av. Siempreviva 123
+          password:
+            type: string
+            example: MiPass1234  
+          rol:
+            type: string
+            example: ADMIN
+            
+            
+    product:
+      type: object
+      properties:
+        product_id:
+          type: integer
+          example: 5
+        name:
+          type: string
+          example: Mini Torta
+        price:
+          type: number
+          example: 85.5
+        img_url:
+          type: string
+          example: https://via.placeholder.com/150
+        description:
+          type: string
+          example: Mini Torta / Postre Individual, Artesanal. Sabores (Brownie, Choco Torta, Choco Oreo, Lemon Pie. Oreo.)
+        is_disabled:
+          type: boolean
+          example: 0
+    products:
+      type: array
+      items:
+        $ref: "#/components/schemas/product"
+
+    order:
+      type: object
+      properties:
+        ESTADO: 
+          type: string
+          example: NUEVO
+        HORA:
+          type: string
+          format: date-time
+          example: "2020-04-10T10:11:12Z"
+        Numero:
+          type: integer
+          example: 1
+        Description:
+          type: string
+          example: "1x MiniTorta"
+        pago:
+          type: string
+          example: EFECTIVO
+        total:
+          type: integer
+          example: 666
+        user_id:
+          type: integer
+          example: 1
+        delivery_address:
+          type: string
+          example: Av. Siempreviva 123
+    orders:
+      type: array
+      items:
+        $ref: "#/components/schemas/order"
+    newOrder:
+      type: object
+      properties:
+        payment_method:
+          type: string
+          example: cash
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              product_id:
+                type: integer
+                example: 1
+              amount:
+                type: integer
+                example: 3
+    Token:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiYW5hIiwiaWF0IjoxNTk5NzE2OTkyfQ.GEUYTB_wLaNdZSyC65Pys6Mkfuie904stRl53_QdXQg
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Ocurrió un error: <error>"
+      required:
+        - error
+    Send:
+      type: string
+      example: "Error message"
+      
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  # Reused Responses
+  responses:
+    UnauthorizedError:
+      description: Token Inválido.
+    Disabled:
+      description: Solicitud inválida, cuenta de usuario inhabilitada.
+    NotAdmin:
+      description: "Operación prohibida, no un administrador."
+    NotFound:
+      description: No se encontró el recurso especificado.
+    Default:
+      description: Error inesperado.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: No autorizado
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: "#/components/schemas/Send"
+          examples:
+            Token Invalidation:
+              summary: No autorizado - Token inválido.
+              value: No autorizado - Token inválido.
+            Disabled Account:
+              summary: No autorizado - Cuenta deshabilitada.
+              value: No autorizado - Usuario deshabilitado. 
+    UnauthorizedAdmin:
+      description: No autorizado.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: "#/components/schemas/Send"
+          examples:
+            Token Invalidation:
+              summary: No autorizado - Token inválido.
+              value: No autorizado - Token inválido.
+
+security:
+  - bearerAuth: []    
