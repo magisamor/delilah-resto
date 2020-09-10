@@ -1,14 +1,14 @@
 # README para API Delilah Restó
 
-Herramientas necesarias:
+# Herramientas necesarias:
 
-Visual Code.
-NodeJS.
-XAMPP.
-MYSQL workbench para poder hostear y manejar los pedidos a la base de datos.
+  - Visual Code.
+  - NodeJS.
+  - XAMPP.
+  - MYSQL workbench para poder hostear y manejar los pedidos a la base de datos.
 
 
-Pasos requeridos para inicializar el servidor:
+# Pasos requeridos para inicializar el servidor:
 
   - Iniciar Apache y MySQL en servidor XAMPP.
   - Importar las queries del archivo DB.sql en sql. 
